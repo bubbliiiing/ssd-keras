@@ -2,9 +2,9 @@
 这是一个ssd-keras的源码，可以用于训练自己的模型。
 
 # 文件下载
-训练所需的ssd_weights.h5可以在Release里面下载。  
-https://github.com/bubbliiiing/ssd-keras/releases  
-
+训练所需的ssd_weights.h5可以在百度云下载。  
+链接: https://pan.baidu.com/s/17diCwawNy9WcqXhddl8qIw  
+提取码: kquc  
 # 训练步骤
 1、本文使用VOC格式进行训练。  
 2、训练前将标签文件放在VOCdevkit文件夹下的VOC2007文件夹下的Annotation中。  
