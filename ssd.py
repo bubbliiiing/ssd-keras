@@ -11,8 +11,8 @@ from PIL import Image,ImageFont, ImageDraw
 
 class SSD(object):
     _defaults = {
-        "model_path": 'logs/ep022-loss7.955-val_loss8.796.h5',
-        "classes_path": 'model_data/classes.txt',
+        "model_path": 'model_data/ssd_weights.h5',
+        "classes_path": 'model_data/voc_classes.txt',
         "model_image_size" : (300, 300, 3),
         "confidence": 0.5,
     }
@@ -93,6 +93,7 @@ class SSD(object):
         results = self.bbox_util.detection_out(preds)
         if len(results[0])<=0:
             return image
+
         # 筛选出其中得分高于confidence的框
         det_label = results[0][:, 0]
         det_conf = results[0][:, 1]
