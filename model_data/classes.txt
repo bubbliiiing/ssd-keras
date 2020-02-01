@@ -1,3 +1,0 @@
-prohibitory
-warning
-mandatory
