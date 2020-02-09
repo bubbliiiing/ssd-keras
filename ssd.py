@@ -56,15 +56,9 @@ class SSD(object):
 
         # 载入模型，如果原来的模型里已经包括了模型结构则直接载入。
         # 否则先构建模型再载入
-        try:
-            self.ssd_model = load_model(model_path, compile=False)
-        except:
-            self.ssd_model = ssd.SSD300(self.model_image_size,self.num_classes)
-            self.ssd_model.load_weights(self.model_path,by_name=True)
-        else:
-            assert self.ssd_model.layers[-1].output_shape[-1] == \
-                num_anchors/len(self.ssd_model.output) * (self.num_classes + 5), \
-                'Mismatch between model and given anchor and class sizes'
+
+        self.ssd_model = ssd.SSD300(self.model_image_size,self.num_classes)
+        self.ssd_model.load_weights(self.model_path,by_name=True)
 
         self.ssd_model.summary()
         print('{} model, anchors, and classes loaded.'.format(model_path))
@@ -102,7 +96,8 @@ class SSD(object):
         top_conf = det_conf[top_indices]
         top_label_indices = det_label[top_indices].tolist()
         top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(det_xmin[top_indices],-1),np.expand_dims(det_ymin[top_indices],-1),np.expand_dims(det_xmax[top_indices],-1),np.expand_dims(det_ymax[top_indices],-1)
-
+        
+        # 去掉灰条
         boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([300,300]),image_shape)
 
         font = ImageFont.truetype(font='model_data/simhei.ttf',size=np.floor(3e-2 * np.shape(image)[1] + 0.5).astype('int32'))
