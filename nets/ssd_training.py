@@ -197,16 +197,20 @@ class Generator(object):
         random_ratio += self.aspect_ratio_range[0]
         w = np.round(np.sqrt(target_area * random_ratio))     
         h = np.round(np.sqrt(target_area / random_ratio))
+        
         if np.random.random() < 0.5:
             w, h = h, w
         w = min(w, img_w)
+        h = min(h, img_h)
+        
+        w = min(h,w)
+        h = w
+        
         w_rel = w / img_w
         w = int(w)
-        h = min(h, img_h)
         h_rel = h / img_h
         h = int(h)
-        h = max(h,w)
-        w = h
+        
         x = np.random.random() * (img_w - w)
         x_rel = x / img_w
         x = int(x)
