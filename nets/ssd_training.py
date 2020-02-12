@@ -205,6 +205,8 @@ class Generator(object):
         h = min(h, img_h)
         h_rel = h / img_h
         h = int(h)
+        h = max(h,w)
+        w = h
         x = np.random.random() * (img_w - w)
         x_rel = x / img_w
         x = int(x)
