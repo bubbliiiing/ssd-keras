@@ -267,7 +267,7 @@ class Generator(object):
                 y = np.concatenate([boxes,one_hot_label],axis=-1)
 
                 # 随机裁剪
-                if train and self.do_crop:
+                if self.do_crop:
                     img, y = self.random_sized_crop(img, y)
 
                 img = np.array(Image.fromarray(np.uint8(img)).resize(self.image_size),dtype=np.float32)
