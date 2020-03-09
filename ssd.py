@@ -135,10 +135,10 @@ class SSD(object):
             for i in range(thickness):
                 draw.rectangle(
                     [left + i, top + i, right - i, bottom - i],
-                    outline=self.colors[int(c)])
+                    outline=self.colors[int(c)-1])
             draw.rectangle(
                 [tuple(text_origin), tuple(text_origin + label_size)],
-                fill=self.colors[int(c)])
+                fill=self.colors[int(c)-1])
             draw.text(text_origin, str(label,'UTF-8'), fill=(0, 0, 0), font=font)
             del draw
         return image
