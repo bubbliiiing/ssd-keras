@@ -18,7 +18,7 @@ if __name__ == "__main__":
     log_dir = "logs/"
     annotation_path = '2007_train.txt'
     
-    NUM_CLASSES = 4
+    NUM_CLASSES = 21
     input_shape = (300, 300, 3)
     priors = pickle.load(open('model_data/prior_boxes_ssd300.pkl', 'rb'))
     bbox_util = BBoxUtility(NUM_CLASSES, priors)
