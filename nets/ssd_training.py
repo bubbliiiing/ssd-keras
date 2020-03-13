@@ -64,8 +64,8 @@ class MultiboxLoss(object):
         has_min = tf.to_float(tf.reduce_any(pos_num_neg_mask))
         num_neg = tf.concat( axis=0,values=[num_neg,
                                 [(1 - has_min) * self.negatives_for_hard]])
-        # 求平均每个图片要取多少个负样本
-        num_neg_batch = tf.reduce_mean(tf.boolean_mask(num_neg,
+        # 求每个图片要取多少个负样本
+        num_neg_batch = tf.reduce_min(tf.boolean_mask(num_neg,
                                                       tf.greater(num_neg, 0)))
         num_neg_batch = tf.to_int32(num_neg_batch)
 
@@ -205,6 +205,12 @@ class Generator(object):
                 boxes[:,1] = boxes[:,1]/self.image_size[0]
                 boxes[:,2] = boxes[:,2]/self.image_size[1]
                 boxes[:,3] = boxes[:,3]/self.image_size[0]
+                
+                if ((boxes[:,2] - boxes[:,0])<=0).any():
+                    continue
+                if ((boxes[:,3] - boxes[:,1])<=0).any():
+                    continue
+    
                 one_hot_label = np.eye(self.num_classes)[np.array(y[:,4],np.int32)]
                 
                 y = np.concatenate([boxes,one_hot_label],axis=-1)
