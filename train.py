@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     BATCH_SIZE = 4
     gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
-                    (input_shape[0], input_shape[1]),NUM_CLASSES, do_crop=True)
+                    (input_shape[0], input_shape[1]),NUM_CLASSES)
 
     if True:
         model.compile(optimizer=Adam(lr=1e-4),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=5.0).compute_loss)
