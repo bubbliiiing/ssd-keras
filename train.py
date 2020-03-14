@@ -48,7 +48,7 @@ if __name__ == "__main__":
                     (input_shape[0], input_shape[1]),NUM_CLASSES)
 
     if True:
-        model.compile(optimizer=Adam(lr=5e-5),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
+        model.compile(optimizer=Adam(lr=1e-4),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
                 steps_per_epoch=num_train//BATCH_SIZE,
                 validation_data=gen.generate(False),
