@@ -32,39 +32,60 @@ class MultiboxLoss(object):
         batch_size = tf.shape(y_true)[0]
         num_boxes = tf.to_float(tf.shape(y_true)[1])
 
-        # loss for all priors
+        # 计算所有的loss
+        # 分类的loss
+        # batch_size,8732,21 -> batch_size,8732
         conf_loss = self._softmax_loss(y_true[:, :, 4:-8],
                                        y_pred[:, :, 4:-8])
+        # 框的位置的loss
+        # batch_size,8732,4 -> batch_size,8732
         loc_loss = self._l1_smooth_loss(y_true[:, :, :4],
                                         y_pred[:, :, :4])
 
-        # get positives loss
+        # 获取所有的正标签的loss
+        # 每一张图的pos的个数
         num_pos = tf.reduce_sum(y_true[:, :, -8], axis=-1)
+        # 每一张图的pos_loc_loss
         pos_loc_loss = tf.reduce_sum(loc_loss * y_true[:, :, -8],
                                      axis=1)
+        # 每一张图的pos_conf_loss
         pos_conf_loss = tf.reduce_sum(conf_loss * y_true[:, :, -8],
                                       axis=1)
 
-        # get negatives loss, we penalize only confidence here
+        # 获取一定的负样本
         num_neg = tf.minimum(self.neg_pos_ratio * num_pos,
                              num_boxes - num_pos)
+
+        # 找到了哪些值是大于0的
         pos_num_neg_mask = tf.greater(num_neg, 0)
+        # 获得一个1.0
         has_min = tf.to_float(tf.reduce_any(pos_num_neg_mask))
         num_neg = tf.concat( axis=0,values=[num_neg,
                                 [(1 - has_min) * self.negatives_for_hard]])
+        # 求平均每个图片要取多少个负样本
         num_neg_batch = tf.reduce_min(tf.boolean_mask(num_neg,
                                                       tf.greater(num_neg, 0)))
         num_neg_batch = tf.to_int32(num_neg_batch)
+
+        # conf的起始
         confs_start = 4 + self.background_label_id + 1
+        # conf的结束
         confs_end = confs_start + self.num_classes - 1
+
+        # 找到实际上在该位置不应该有预测结果的框，求他们最大的置信度。
         max_confs = tf.reduce_max(y_pred[:, :, confs_start:confs_end],
                                   axis=2)
+        
+        # 取top_k个置信度，作为负样本
         _, indices = tf.nn.top_k(max_confs * (1 - y_true[:, :, -8]),
                                  k=num_neg_batch)
+
+        # 找到其在1维上的索引
         batch_idx = tf.expand_dims(tf.range(0, batch_size), 1)
         batch_idx = tf.tile(batch_idx, (1, num_neg_batch))
         full_indices = (tf.reshape(batch_idx, [-1]) * tf.to_int32(num_boxes) +
                         tf.reshape(indices, [-1]))
+        
         # full_indices = tf.concat(2, [tf.expand_dims(batch_idx, 2),
         #                              tf.expand_dims(indices, 2)])
         # neg_conf_loss = tf.gather_nd(conf_loss, full_indices)
