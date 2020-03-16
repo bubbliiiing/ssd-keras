@@ -47,16 +47,20 @@ if __name__ == "__main__":
     gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
                     (input_shape[0], input_shape[1]),NUM_CLASSES)
 
+    for i in range(21):
+        model.layers[i].trainable = False
     if True:
         model.compile(optimizer=Adam(lr=1e-4),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
                 steps_per_epoch=num_train//BATCH_SIZE,
                 validation_data=gen.generate(False),
                 validation_steps=num_val//BATCH_SIZE,
-                epochs=10, 
+                epochs=15, 
                 initial_epoch=0,
                 callbacks=[logging, checkpoint, reduce_lr, early_stopping])
 
+    for i in range(21):
+        model.layers[i].trainable = True
     if True:
         model.compile(optimizer=Adam(lr=1e-5),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
@@ -64,5 +68,5 @@ if __name__ == "__main__":
                 validation_data=gen.generate(False),
                 validation_steps=num_val//BATCH_SIZE,
                 epochs=50, 
-                initial_epoch=10,
+                initial_epoch=15,
                 callbacks=[logging, checkpoint, reduce_lr, early_stopping])
