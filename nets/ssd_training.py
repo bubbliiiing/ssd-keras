@@ -20,10 +20,10 @@ class MultiboxLoss(object):
         abs_loss = tf.abs(y_true - y_pred)
         sq_loss = 0.5 * (y_true - y_pred)**2
         l1_loss = tf.where(tf.less(abs_loss, 1.0), sq_loss, abs_loss - 0.5)
-        return tf.reduce_sum(l1_loss, -1)
+        return tf.reduce_mean(l1_loss, -1)
 
     def _softmax_loss(self, y_true, y_pred):
-        y_pred = tf.maximum(tf.minimum(y_pred, 1 - 1e-15), 1e-15)
+        y_pred = tf.maximum(y_pred, 1e-7)
         softmax_loss = -tf.reduce_sum(y_true * tf.log(y_pred),
                                       axis=-1)
         return softmax_loss
@@ -75,7 +75,7 @@ class MultiboxLoss(object):
         # 找到实际上在该位置不应该有预测结果的框，求他们最大的置信度。
         max_confs = tf.reduce_max(y_pred[:, :, confs_start:confs_end],
                                   axis=2)
-        
+
         # 取top_k个置信度，作为负样本
         _, indices = tf.nn.top_k(max_confs * (1 - y_true[:, :, -8]),
                                  k=num_neg_batch)
@@ -96,11 +96,12 @@ class MultiboxLoss(object):
         neg_conf_loss = tf.reduce_sum(neg_conf_loss, axis=1)
 
         # loss is sum of positives and negatives
-        total_loss = pos_conf_loss + neg_conf_loss
-        total_loss /= (num_pos + tf.to_float(num_neg_batch))
+        
         num_pos = tf.where(tf.not_equal(num_pos, 0), num_pos,
                             tf.ones_like(num_pos))
-        total_loss += (self.alpha * pos_loc_loss) / num_pos
+        total_loss = tf.reduce_sum(pos_conf_loss) + tf.reduce_sum(neg_conf_loss)
+        total_loss /= tf.reduce_sum(num_pos)
+        total_loss += tf.reduce_sum(self.alpha * pos_loc_loss) / tf.reduce_sum(num_pos)
         return total_loss
 
 class Generator(object):
@@ -201,14 +202,11 @@ class Generator(object):
         if np.random.random() < 0.5:
             w, h = h, w
         w = min(w, img_w)
-        w = int(w)
         h = min(h, img_h)
-        h = int(h)
-        
-        h = min(h,w)
-        w = h
         w_rel = w / img_w
+        w = int(w)
         h_rel = h / img_h
+        h = int(h)
         x = np.random.random() * (img_w - w)
         x_rel = x / img_w
         x = int(x)
@@ -243,6 +241,7 @@ class Generator(object):
             else:
                 shuffle(self.val_lines)
                 lines = self.val_lines
+            # print(lines[0])
             inputs = []
             targets = []
             for annotation_line in lines:  
@@ -250,6 +249,7 @@ class Generator(object):
                 img_path = line[0]
                 img = imread(img_path).astype('float32')
                 shape = np.shape(img)
+                # print(np.array(img))
                 y = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
                 if len(y)==0:
                     continue
@@ -262,6 +262,7 @@ class Generator(object):
                 y = np.concatenate([boxes,one_hot_label],axis=-1)
                 if train and self.do_crop:
                     img, y = self.random_sized_crop(img, y)
+                # print(np.shape(img))
                 img = imresize(img, self.image_size).astype('float32')
                 if train:
                     shuffle(self.color_jitter)
@@ -273,6 +274,8 @@ class Generator(object):
                         img, y = self.horizontal_flip(img, y)
                     if self.vflip_prob > 0:
                         img, y = self.vertical_flip(img, y)
+                if len(y)==0:
+                    continue
                 y = self.bbox_util.assign_boxes(y)
                 inputs.append(img)                
                 targets.append(y)
@@ -281,4 +284,5 @@ class Generator(object):
                     tmp_targets = np.array(targets)
                     inputs = []
                     targets = []
+                    # print(np.shape(tmp_targets))
                     yield preprocess_input(tmp_inp), tmp_targets
