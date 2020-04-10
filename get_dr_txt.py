@@ -11,7 +11,7 @@ class mAP_SSD(SSD):
     #---------------------------------------------------#
     def detect_image(self,image_id,image):
         self.confidence = 0.05
-        f = open("./input/detection-results/"+image_id+".txt","a") 
+        f = open("./input/detection-results/"+image_id+".txt","w") 
         image_shape = np.array(np.shape(image)[0:2])
         crop_img,x_offset,y_offset = letterbox_image(image, (self.model_image_size[0],self.model_image_size[1]))
         photo = np.array(crop_img,dtype = np.float64)
