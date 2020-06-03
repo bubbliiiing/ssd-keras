@@ -54,9 +54,7 @@ class SSD(object):
         # 计算总的种类
         self.num_classes = len(self.class_names) + 1
 
-        # 载入模型，如果原来的模型里已经包括了模型结构则直接载入。
-        # 否则先构建模型再载入
-
+        # 载入模型
         self.ssd_model = ssd.SSD300(self.model_image_size,self.num_classes)
         self.ssd_model.load_weights(self.model_path,by_name=True)
 
