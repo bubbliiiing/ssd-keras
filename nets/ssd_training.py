@@ -1,8 +1,6 @@
 import tensorflow as tf
 from random import shuffle
 import numpy as np
-from scipy.misc import imread
-from scipy.misc import imresize
 from PIL import Image
 from keras.applications.imagenet_utils import preprocess_input
 from keras import backend as K
@@ -192,6 +190,7 @@ class Generator(object):
         else:
             return image_data, []
 
+
     def generate(self, train=True):
         while True:
             if train:
@@ -205,18 +204,17 @@ class Generator(object):
             targets = []
             for annotation_line in lines:  
                 img,y=self.get_random_data(annotation_line,self.image_size[0:2])
-                if len(y)==0:
-                    continue
-                boxes = np.array(y[:,:4],dtype=np.float32)
-                boxes[:,0] = boxes[:,0]/self.image_size[1]
-                boxes[:,1] = boxes[:,1]/self.image_size[0]
-                boxes[:,2] = boxes[:,2]/self.image_size[1]
-                boxes[:,3] = boxes[:,3]/self.image_size[0]
-                one_hot_label = np.eye(self.num_classes)[np.array(y[:,4],np.int32)]
-                if ((boxes[:,3]-boxes[:,1])<=0).any() and ((boxes[:,2]-boxes[:,0])<=0).any():
-                    continue
-                
-                y = np.concatenate([boxes,one_hot_label],axis=-1)
+                if len(y)!=0:
+                    boxes = np.array(y[:,:4],dtype=np.float32)
+                    boxes[:,0] = boxes[:,0]/self.image_size[1]
+                    boxes[:,1] = boxes[:,1]/self.image_size[0]
+                    boxes[:,2] = boxes[:,2]/self.image_size[1]
+                    boxes[:,3] = boxes[:,3]/self.image_size[0]
+                    one_hot_label = np.eye(self.num_classes)[np.array(y[:,4],np.int32)]
+                    if ((boxes[:,3]-boxes[:,1])<=0).any() and ((boxes[:,2]-boxes[:,0])<=0).any():
+                        continue
+                    
+                    y = np.concatenate([boxes,one_hot_label],axis=-1)
 
                 y = self.bbox_util.assign_boxes(y)
                 inputs.append(img)                
@@ -227,3 +225,4 @@ class Generator(object):
                     inputs = []
                     targets = []
                     yield preprocess_input(tmp_inp), tmp_targets
+
