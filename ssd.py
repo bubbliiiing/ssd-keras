@@ -9,6 +9,10 @@ from keras.applications.imagenet_utils import preprocess_input
 from utils.utils import BBoxUtility,letterbox_image,ssd_correct_boxes
 from PIL import Image,ImageFont, ImageDraw
 
+#--------------------------------------------#
+#   使用自己训练好的模型预测需要修改2个参数
+#   model_path和classes_path都需要修改！
+#--------------------------------------------#
 class SSD(object):
     _defaults = {
         "model_path": 'model_data/ssd_weights.h5',
