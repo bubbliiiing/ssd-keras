@@ -34,6 +34,9 @@ if __name__ == "__main__":
     num_train = len(lines) - num_val
     
     model = SSD300(input_shape, num_classes=NUM_CLASSES)
+    #-------------------------------------------#
+    #   权值文件的下载请看README
+    #-------------------------------------------#
     model.load_weights('model_data/ssd_weights.h5', by_name=True, skip_mismatch=True)
 
     # 训练参数设置
