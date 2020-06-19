@@ -217,7 +217,7 @@ class Generator(object):
                     y = np.concatenate([boxes,one_hot_label],axis=-1)
 
                 y = self.bbox_util.assign_boxes(y)
-                inputs.append(preprocess_input(img))             
+                inputs.append(img)               
                 targets.append(y)
                 if len(targets) == self.batch_size:
                     tmp_inp = np.array(inputs)
