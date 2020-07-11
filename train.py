@@ -14,6 +14,11 @@ import cv2
 import keras
 import os
 import sys
+
+#----------------------------------------------------#
+#   检测精度mAP和pr曲线计算参考视频
+#   https://www.bilibili.com/video/BV1zE411u7Vw
+#----------------------------------------------------#
 if __name__ == "__main__":
     log_dir = "logs/"
     annotation_path = '2007_train.txt'
@@ -34,9 +39,11 @@ if __name__ == "__main__":
     num_train = len(lines) - num_val
     
     model = SSD300(input_shape, num_classes=NUM_CLASSES)
-    #-------------------------------------------#
-    #   权值文件的下载请看README
-    #-------------------------------------------#
+    #------------------------------------------------------#
+    #   权值文件请看README，百度网盘下载
+    #   训练自己的数据集时提示维度不匹配正常
+    #   预测的东西都不一样了自然维度不匹配
+    #------------------------------------------------------#
     model.load_weights('model_data/ssd_weights.h5', by_name=True, skip_mismatch=True)
 
     # 训练参数设置
@@ -50,6 +57,11 @@ if __name__ == "__main__":
     gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
                     (input_shape[0], input_shape[1]),NUM_CLASSES)
 
+    #------------------------------------------------------#
+    #   主干特征提取网络特征通用，冻结训练可以加快训练速度
+    #   也可以在训练初期防止权值被破坏。、
+    #   提示OOM或者显存不足请调小Batch_size
+    #------------------------------------------------------#
     for i in range(21):
         model.layers[i].trainable = False
     if True:
