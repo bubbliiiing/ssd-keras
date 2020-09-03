@@ -33,7 +33,7 @@ if __name__ == "__main__":
     #   修改起来比较麻烦，所以我只是修改了输入大小
     #   这样也可以用比较大的图片训练，对于小目标有好处
     #--------------------------------------------------#
-    input_shape = (512, 512, 3)
+    input_shape = (300, 300, 3)
     priors = get_anchors((input_shape[0],input_shape[1]))
     bbox_util = BBoxUtility(NUM_CLASSES, priors)
 
