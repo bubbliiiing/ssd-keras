@@ -5,6 +5,7 @@ from keras.preprocessing import image
 from nets.ssd import SSD300
 from nets.ssd_training import MultiboxLoss,Generator
 from utils.utils import BBoxUtility
+from utils.anchors import get_anchors
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
 import numpy as np
@@ -24,8 +25,16 @@ if __name__ == "__main__":
     annotation_path = '2007_train.txt'
     
     NUM_CLASSES = 21
-    input_shape = (300, 300, 3)
-    priors = pickle.load(open('model_data/prior_boxes_ssd300.pkl', 'rb'))
+    #--------------------------------------------------#
+    #   input_shape有两个选择。
+    #   一个是(300, 300, 3)、一个是(512, 512, 3)。
+    #   这里的SSD512不是原版的SSD512。
+    #   原版的SSD512的比SSD300多一个预测层；
+    #   修改起来比较麻烦，所以我只是修改了输入大小
+    #   这样也可以用比较大的图片训练，对于小目标有好处
+    #--------------------------------------------------#
+    input_shape = (512, 512, 3)
+    priors = get_anchors((input_shape[0],input_shape[1]))
     bbox_util = BBoxUtility(NUM_CLASSES, priors)
 
     # 0.1用于验证，0.9用于训练
@@ -83,10 +92,11 @@ if __name__ == "__main__":
                 initial_epoch=15,
                 callbacks=[logging, checkpoint, reduce_lr, early_stopping])
 
+
     for i in range(21):
         model.layers[i].trainable = True
     if True:
-        model.compile(optimizer=Adam(lr=1e-4),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
+        model.compile(optimizer=Adam(lr=1e-5),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
                 steps_per_epoch=num_train//BATCH_SIZE,
                 validation_data=gen.generate(False),
