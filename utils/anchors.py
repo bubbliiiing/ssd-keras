@@ -111,7 +111,7 @@ def get_anchors(img_size = (300,300)):
     elif img_size == (300,300):
         features_map_length = [38,19,10,5,3,1]
     else:
-		raise ValueError('Unsupported img_size - `{}`, Use (300,300), (512,512).'.format(img_size)
+        raise ValueError('Unsupported img_size - `{}`, Use (300,300), (512,512).'.format(img_size))
 
     net = {} 
     priorbox = PriorBox(img_size, 30.0,max_size = 60.0, aspect_ratios=[2],
