@@ -3,7 +3,6 @@
 #   具体视频教程可查看
 #   https://www.bilibili.com/video/BV1zE411u7Vw
 #----------------------------------------------------#
-from keras.layers import Input
 from ssd import SSD
 from PIL import Image
 from keras.applications.imagenet_utils import preprocess_input
@@ -46,7 +45,6 @@ class mAP_SSD(SSD):
         # 去掉灰条
         boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.model_image_size[0],self.model_image_size[1]]),image_shape)
 
-
         for i, c in enumerate(top_label_indices):
             predicted_class = self.class_names[int(c)-1]
             score = str(top_conf[i])
@@ -66,7 +64,6 @@ if not os.path.exists("./input/detection-results"):
     os.makedirs("./input/detection-results")
 if not os.path.exists("./input/images-optional"):
     os.makedirs("./input/images-optional")
-
 
 for image_id in tqdm(image_ids):
     image_path = "./VOCdevkit/VOC2007/JPEGImages/"+image_id+".jpg"
