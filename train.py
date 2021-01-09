@@ -122,7 +122,7 @@ if __name__ == "__main__":
         Freeze_epoch = 50
         Epoch = 100
         BATCH_SIZE = 8
-        learning_rate_base = 1e-5
+        learning_rate_base = 1e-4
         
         gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
                         (input_shape[0], input_shape[1]),NUM_CLASSES)
