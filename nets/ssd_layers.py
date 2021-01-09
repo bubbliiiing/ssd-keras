@@ -6,10 +6,7 @@ import tensorflow as tf
 
 class Normalize(Layer):
     def __init__(self, scale, **kwargs):
-        if K.image_dim_ordering() == 'tf':
-            self.axis = 3
-        else:
-            self.axis = 1
+        self.axis = 3
         self.scale = scale
         super(Normalize, self).__init__(**kwargs)
 
@@ -25,17 +22,11 @@ class Normalize(Layer):
         output *= self.gamma
         return output
 
-
 class PriorBox(Layer):
     def __init__(self, img_size, min_size, max_size=None, aspect_ratios=None,
                  flip=True, variances=[0.1], clip=True, **kwargs):
-
-        if K.image_dim_ordering() == 'tf':
-            self.waxis = 2
-            self.haxis = 1
-        else:
-            self.waxis = 3
-            self.haxis = 2
+        self.waxis = 2
+        self.haxis = 1
 
         self.img_size = img_size
         if min_size <= 0:
@@ -48,6 +39,7 @@ class PriorBox(Layer):
             if max_size < min_size:
                 raise Exception('max_size must be greater than min_size.')
             self.aspect_ratios.append(1.0)
+
         if aspect_ratios:
             for ar in aspect_ratios:
                 if ar in self.aspect_ratios:
@@ -71,30 +63,55 @@ class PriorBox(Layer):
             input_shape = x._keras_shape
         elif hasattr(K, 'int_shape'):
             input_shape = K.int_shape(x)
-        # ------------------ #
-        #   获取宽和高
-        # ------------------ #
+        # --------------------------------- #
+        #   获取输入进来的特征层的宽和高
+        #   比如38x38
+        # --------------------------------- #
         layer_width = input_shape[self.waxis]
         layer_height = input_shape[self.haxis]
 
-        img_width = self.img_size[0]
-        img_height = self.img_size[1]
+        # --------------------------------- #
+        #   获取输入进来的图片的宽和高
+        #   比如300x300
+        # --------------------------------- #
+        img_width = self.img_size[1]
+        img_height = self.img_size[0]
         box_widths = []
         box_heights = []
+        # --------------------------------- #
+        #   self.aspect_ratios一般有两个值
+        #   [1, 1, 2, 1/2]
+        #   [1, 1, 2, 1/2, 3, 1/3]
+        # --------------------------------- #
         for ar in self.aspect_ratios:
+            # 首先添加一个较小的正方形
             if ar == 1 and len(box_widths) == 0:
                 box_widths.append(self.min_size)
                 box_heights.append(self.min_size)
+            # 然后添加一个较大的正方形
             elif ar == 1 and len(box_widths) > 0:
                 box_widths.append(np.sqrt(self.min_size * self.max_size))
                 box_heights.append(np.sqrt(self.min_size * self.max_size))
+            # 然后添加长方形
             elif ar != 1:
                 box_widths.append(self.min_size * np.sqrt(ar))
                 box_heights.append(self.min_size / np.sqrt(ar))
+
+        # --------------------------------- #
+        #   获得所有先验框的宽高1/2
+        # --------------------------------- #
         box_widths = 0.5 * np.array(box_widths)
         box_heights = 0.5 * np.array(box_heights)
+
+        # --------------------------------- #
+        #   每一个特征层对应的步长
+        # --------------------------------- #
         step_x = img_width / layer_width
         step_y = img_height / layer_height
+
+        # --------------------------------- #
+        #   生成网格中心
+        # --------------------------------- #
         linx = np.linspace(0.5 * step_x, img_width - 0.5 * step_x,
                            layer_width)
         liny = np.linspace(0.5 * step_y, img_height - 0.5 * step_y,
@@ -103,8 +120,8 @@ class PriorBox(Layer):
         centers_x = centers_x.reshape(-1, 1)
         centers_y = centers_y.reshape(-1, 1)
 
-        num_priors_ = len(self.aspect_ratios)
         # 每一个先验框需要两个(centers_x, centers_y)，前一个用来计算左上角，后一个计算右下角
+        num_priors_ = len(self.aspect_ratios)
         prior_boxes = np.concatenate((centers_x, centers_y), axis=1)
         prior_boxes = np.tile(prior_boxes, (1, 2 * num_priors_))
         
@@ -114,7 +131,10 @@ class PriorBox(Layer):
         prior_boxes[:, 2::4] += box_widths
         prior_boxes[:, 3::4] += box_heights
 
-        # 变成小数的形式
+        # --------------------------------- #
+        #   将先验框变成小数的形式
+        #   归一化
+        # --------------------------------- #
         prior_boxes[:, ::2] /= img_width
         prior_boxes[:, 1::2] /= img_height
         prior_boxes = prior_boxes.reshape(-1, 4)

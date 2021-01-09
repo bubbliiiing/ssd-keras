@@ -1,14 +1,7 @@
 import keras.backend as K
-from keras.layers import Activation
-from keras.layers import Conv2D
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import GlobalAveragePooling2D
-from keras.layers import Input
-from keras.layers import MaxPooling2D
-from keras.layers import merge, concatenate
-from keras.layers import Reshape
-from keras.layers import ZeroPadding2D
+from keras.layers import (Activation, Conv2D, Dense, Flatten,
+                          GlobalAveragePooling2D, Input, MaxPooling2D, Reshape,
+                          ZeroPadding2D, concatenate, merge)
 from keras.models import Model
 
 def VGG16(input_tensor):
@@ -28,8 +21,6 @@ def VGG16(input_tensor):
                                    name='conv1_2')(net['conv1_1'])
     net['pool1'] = MaxPooling2D((2, 2), strides=(2, 2), padding='same',
                                 name='pool1')(net['conv1_2'])
-
-    
     # Block 2
     # 150,150,64 -> 75,75,128
     net['conv2_1'] = Conv2D(128, kernel_size=(3,3),
@@ -130,7 +121,6 @@ def VGG16(input_tensor):
     net['conv8_2'] = Conv2D(256, kernel_size=(3,3), strides=(1, 1),
                                    activation='relu', padding='valid',
                                    name='conv8_2')(net['conv8_1'])
-
     # Block 9
     # 3,3,256 -> 1,1,256
     net['conv9_1'] = Conv2D(128, kernel_size=(1,1), activation='relu',

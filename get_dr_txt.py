@@ -3,14 +3,17 @@
 #   具体视频教程可查看
 #   https://www.bilibili.com/video/BV1zE411u7Vw
 #----------------------------------------------------#
-from keras.layers import Input
-from ssd import SSD
-from PIL import Image
-from keras.applications.imagenet_utils import preprocess_input
-from utils.utils import BBoxUtility,letterbox_image,ssd_correct_boxes
-from tqdm import tqdm
-import numpy as np
 import os
+
+import numpy as np
+from keras.applications.imagenet_utils import preprocess_input
+from keras.layers import Input
+from PIL import Image
+from tqdm import tqdm
+
+from ssd import SSD
+from utils.utils import BBoxUtility, letterbox_image, ssd_correct_boxes
+
 
 class mAP_SSD(SSD):
     #---------------------------------------------------#
@@ -20,11 +23,11 @@ class mAP_SSD(SSD):
         self.confidence = 0.01
         f = open("./input/detection-results/"+image_id+".txt","w") 
         image_shape = np.array(np.shape(image)[0:2])
-        crop_img,x_offset,y_offset = letterbox_image(image, (self.model_image_size[0],self.model_image_size[1]))
+        crop_img = letterbox_image(image, (self.input_shape[1],self.input_shape[0]))
         photo = np.array(crop_img,dtype = np.float64)
 
         # 图片预处理，归一化
-        photo = preprocess_input(np.reshape(photo,[1,self.model_image_size[0],self.model_image_size[1],3]))
+        photo = preprocess_input(np.reshape(photo,[1,self.input_shape[0],self.input_shape[1],3]))
         preds = self.ssd_model.predict(photo)
 
         # 将预测结果进行解码
@@ -44,8 +47,7 @@ class mAP_SSD(SSD):
         top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(det_xmin[top_indices],-1),np.expand_dims(det_ymin[top_indices],-1),np.expand_dims(det_xmax[top_indices],-1),np.expand_dims(det_ymax[top_indices],-1)
         
         # 去掉灰条
-        boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.model_image_size[0],self.model_image_size[1]]),image_shape)
-
+        boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.input_shape[0],self.input_shape[1]]),image_shape)
 
         for i, c in enumerate(top_label_indices):
             predicted_class = self.class_names[int(c)-1]
@@ -67,7 +69,6 @@ if not os.path.exists("./input/detection-results"):
 if not os.path.exists("./input/images-optional"):
     os.makedirs("./input/images-optional")
 
-
 for image_id in tqdm(image_ids):
     image_path = "./VOCdevkit/VOC2007/JPEGImages/"+image_id+".jpg"
     image = Image.open(image_path)
@@ -75,5 +76,4 @@ for image_id in tqdm(image_ids):
     # image.save("./input/images-optional/"+image_id+".jpg")
     ssd.detect_image(image_id,image)
     
-
 print("Conversion completed!")
