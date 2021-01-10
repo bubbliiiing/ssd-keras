@@ -149,15 +149,6 @@ class Generator(object):
         self.image_size = image_size
         self.num_classes = num_classes - 1
         
-    def get_fix_data(self, annotation_line, input_shape):
-        '''random preprocessing for real-time data augmentation'''
-        line = annotation_line.split()
-        image = Image.open(line[0])
-        iw, ih = image.size
-        h, w = input_shape
-        box = np.array([np.array(list(map(int,box.split(',')))) for box in line[1:]])
-
-
     def get_random_data(self, annotation_line, input_shape, jitter=.3, hue=.1, sat=1.5, val=1.5, random=True):
         '''实时数据增强的随机预处理'''
         line = annotation_line.split()
