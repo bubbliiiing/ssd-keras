@@ -70,16 +70,19 @@ class MultiboxLoss(object):
         # 找到了哪些值是大于0的
         pos_num_neg_mask = tf.greater(num_neg, 0)
         # --------------------------------------------- #
-        #   如果有些图，它的正样本数量为0，
-        #   默认负样本为100
+        #   如果所有的图，正样本的数量均为0
+        #   那么则默认选取100个先验框作为负样本
         # --------------------------------------------- #
         has_min = tf.to_float(tf.reduce_any(pos_num_neg_mask))
         num_neg = tf.concat(axis=0, values=[num_neg, [(1 - has_min) * self.negatives_for_hard]])
         
         # --------------------------------------------- #
-        #   求平均每个图片要取多少个负样本
+        #   从这里往后，与视频中看到的代码有些许不同。
+        #   由于以前的负样本选取方式存在一些问题，
+        #   我对该部分代码进行重构。
+        #   求整个batch应该的负样本数量总和
         # --------------------------------------------- #
-        num_neg_batch = tf.reduce_mean(tf.boolean_mask(num_neg, tf.greater(num_neg, 0)))
+        num_neg_batch = tf.reduce_sum(tf.boolean_mask(num_neg, tf.greater(num_neg, 0)))
         num_neg_batch = tf.to_int32(num_neg_batch)
 
         # --------------------------------------------- #
@@ -92,44 +95,25 @@ class MultiboxLoss(object):
 
         # --------------------------------------------- #
         #   batch_size,8732
+        #   把不是背景的概率求和，求和后的概率越大
+        #   代表越难分类。
         # --------------------------------------------- #
-        max_confs = tf.reduce_max(y_pred[:, :, confs_start:confs_end], axis=2)
+        max_confs = tf.reduce_sum(y_pred[:, :, confs_start:confs_end], axis=2)
 
-        # --------------------------------------------- #
+        # --------------------------------------------------- #
         #   只有没有包含物体的先验框才得到保留
-        #   选取最难分类的负样本
-        # --------------------------------------------- #
-        _, indices = tf.nn.top_k(max_confs * (1 - y_true[:, :, -8]), k=num_neg_batch)
+        #   我们在整个batch里面选取最难分类的num_neg_batch个
+        #   先验框作为负样本。
+        # --------------------------------------------------- #
+        max_confs = tf.reshape(max_confs * (1 - y_true[:, :, -8]), [-1])
+        _, indices = tf.nn.top_k(max_confs, k=num_neg_batch)
 
-        # --------------------------------------------- #
-        #   batch_size,1
-        # --------------------------------------------- #
-        batch_idx = tf.expand_dims(tf.range(0, batch_size), 1)
-
-        # --------------------------------------------- #
-        #   batch_size,num_neg_batch
-        # --------------------------------------------- #
-        batch_idx = tf.tile(batch_idx, (1, num_neg_batch))
-
-        # --------------------------------------------- #
-        #   batch_size*num_neg_batch
-        #   找到一维上的索引
-        #   获取它的loss
-        # --------------------------------------------- #
-        full_indices = (tf.reshape(batch_idx, [-1]) * tf.to_int32(num_boxes) +
-                        tf.reshape(indices, [-1]))
-        neg_conf_loss = tf.gather(tf.reshape(conf_loss, [-1]),
-                                  full_indices)
-        neg_conf_loss = tf.reshape(neg_conf_loss,
-                                   [batch_size, num_neg_batch])
-        neg_conf_loss = tf.reduce_sum(neg_conf_loss, axis=1)
+        neg_conf_loss = tf.gather(tf.reshape(conf_loss, [-1]), indices)
 
         # 进行归一化
         num_pos     = tf.where(tf.not_equal(num_pos, 0), num_pos, tf.ones_like(num_pos))
-        total_loss  = tf.reduce_sum(pos_conf_loss) + tf.reduce_sum(neg_conf_loss)
+        total_loss  = tf.reduce_sum(pos_conf_loss) + tf.reduce_sum(neg_conf_loss) + tf.reduce_sum(self.alpha * pos_loc_loss)
         total_loss /= tf.reduce_sum(num_pos)
-        total_loss += tf.reduce_sum(self.alpha * pos_loc_loss) / tf.reduce_sum(num_pos)
-
         return total_loss
 
 def rand(a=0, b=1):
@@ -189,7 +173,7 @@ class Generator(object):
 
         # resize image
         new_ar = w/h * rand(1-jitter,1+jitter)/rand(1-jitter,1+jitter)
-        scale = rand(.5, 1.5)
+        scale = rand(.25, 2)
         if new_ar < 1:
             nh = int(scale*h)
             nw = int(nh*new_ar)
