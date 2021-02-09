@@ -19,17 +19,23 @@ video.py里面测试的FPS会低于该FPS，因为摄像头的读取频率有限
 '''
 class FPS_SSD(SSD):
     def get_FPS(self, image, test_interval):
-        # 调整图片使其符合输入要求
         image_shape = np.array(np.shape(image)[0:2])
-        crop_img = letterbox_image(image, (self.input_shape[1],self.input_shape[0]))
+        #---------------------------------------------------------#
+        #   给图像增加灰条，实现不失真的resize
+        #   也可以直接resize进行识别
+        #---------------------------------------------------------#
+        if self.letterbox_image:
+            crop_img = np.array(letterbox_image(image, (self.input_shape[1],self.input_shape[0])))
+        else:
+            crop_img = image.convert('RGB')
+            crop_img = crop_img.resize((self.input_shape[1],self.input_shape[0]), Image.BICUBIC)
+
         photo = np.array(crop_img,dtype = np.float64)
-        # 图片预处理，归一化
         photo = preprocess_input(np.reshape(photo,[1,self.input_shape[0],self.input_shape[1],3]))
         preds = self.ssd_model.predict(photo)
-        # 将预测结果进行解码
         results = self.bbox_util.detection_out(preds, confidence_threshold=self.confidence)
+
         if len(results[0])>0:
-            # 筛选出其中得分高于confidence的框
             det_label = results[0][:, 0]
             det_conf = results[0][:, 1]
             det_xmin, det_ymin, det_xmax, det_ymax = results[0][:, 2], results[0][:, 3], results[0][:, 4], results[0][:, 5]
@@ -37,16 +43,24 @@ class FPS_SSD(SSD):
             top_conf = det_conf[top_indices]
             top_label_indices = det_label[top_indices].tolist()
             top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(det_xmin[top_indices],-1),np.expand_dims(det_ymin[top_indices],-1),np.expand_dims(det_xmax[top_indices],-1),np.expand_dims(det_ymax[top_indices],-1)
-            # 去掉灰条
-            boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.input_shape[0],self.input_shape[1]]),image_shape)
+            
+            #-----------------------------------------------------------#
+            #   去掉灰条部分
+            #-----------------------------------------------------------#
+            if self.letterbox_image:
+                boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.input_shape[0],self.input_shape[1]]),image_shape)
+            else:
+                top_xmin = top_xmin * image_shape[1]
+                top_ymin = top_ymin * image_shape[0]
+                top_xmax = top_xmax * image_shape[1]
+                top_ymax = top_ymax * image_shape[0]
+                boxes = np.concatenate([top_ymin,top_xmin,top_ymax,top_xmax], axis=-1)
 
         t1 = time.time()
         for _ in range(test_interval):
             preds = self.ssd_model.predict(photo)
-            # 将预测结果进行解码
             results = self.bbox_util.detection_out(preds, confidence_threshold=self.confidence)
             if len(results[0])>0:
-                # 筛选出其中得分高于confidence的框
                 det_label = results[0][:, 0]
                 det_conf = results[0][:, 1]
                 det_xmin, det_ymin, det_xmax, det_ymax = results[0][:, 2], results[0][:, 3], results[0][:, 4], results[0][:, 5]
@@ -54,9 +68,18 @@ class FPS_SSD(SSD):
                 top_conf = det_conf[top_indices]
                 top_label_indices = det_label[top_indices].tolist()
                 top_xmin, top_ymin, top_xmax, top_ymax = np.expand_dims(det_xmin[top_indices],-1),np.expand_dims(det_ymin[top_indices],-1),np.expand_dims(det_xmax[top_indices],-1),np.expand_dims(det_ymax[top_indices],-1)
-                # 去掉灰条
-                boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.input_shape[0],self.input_shape[1]]),image_shape)
-            
+                #-----------------------------------------------------------#
+                #   去掉灰条部分
+                #-----------------------------------------------------------#
+                if self.letterbox_image:
+                    boxes = ssd_correct_boxes(top_ymin,top_xmin,top_ymax,top_xmax,np.array([self.input_shape[0],self.input_shape[1]]),image_shape)
+                else:
+                    top_xmin = top_xmin * image_shape[1]
+                    top_ymin = top_ymin * image_shape[0]
+                    top_xmax = top_xmax * image_shape[1]
+                    top_ymax = top_ymax * image_shape[0]
+                    boxes = np.concatenate([top_ymin,top_xmin,top_ymax,top_xmax], axis=-1)
+
         t2 = time.time()
         tact_time = (t2 - t1) / test_interval
         return tact_time
