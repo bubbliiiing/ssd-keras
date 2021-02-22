@@ -23,8 +23,8 @@ keras==2.1.5
 
 ## 文件下载
 训练所需的ssd_weights.h5可以在百度云下载。  
-链接: https://pan.baidu.com/s/17diCwawNy9WcqXhddl8qIw  
-提取码: kquc  
+链接: https://pan.baidu.com/s/1uXksuBwSvTRhgyMNGBh9Wg 
+提取码: xq8y
 
 ## 预测步骤
 ### a、使用预训练权重
