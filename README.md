@@ -76,10 +76,6 @@ dog
 ...
 ```
 8. 将train.py的NUM_CLASSSES修改成所需要分的类的个数+1，运行train.py即可开始训练。
-## mAP目标检测精度计算更新
-更新了get_gt_txt.py、get_dr_txt.py和get_map.py文件。  
-get_map文件克隆自https://github.com/Cartucho/mAP  
-具体mAP计算过程可参考：https://www.bilibili.com/video/BV1zE411u7Vw
 
 ## 评估步骤
 评估过程可参考视频https://www.bilibili.com/video/BV1zE411u7Vw  
@@ -91,6 +87,11 @@ get_map文件克隆自https://github.com/Cartucho/mAP
 5. 在yolo.py文件里面，在如下部分修改model_path和classes_path使其对应训练好的文件；**model_path对应logs文件夹下面的权值文件，classes_path是model_path对应分的类**。  
 6. 运行get_dr_txt.py和get_gt_txt.py，在./input/detection-results和./input/ground-truth文件夹下生成对应的txt。  
 7. 运行get_map.py即可开始计算模型的mAP。
+
+## mAP目标检测精度计算更新
+更新了get_gt_txt.py、get_dr_txt.py和get_map.py文件。  
+get_map文件克隆自https://github.com/Cartucho/mAP  
+具体mAP计算过程可参考：https://www.bilibili.com/video/BV1zE411u7Vw
 
 ## Reference
 https://github.com/Cartucho/mAP  
