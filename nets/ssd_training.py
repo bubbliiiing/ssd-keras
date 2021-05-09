@@ -269,7 +269,6 @@ class Generator(object):
                     targets = []
                     yield preprocess_input(tmp_inp), tmp_targets
 
-
 class LossHistory(keras.callbacks.Callback):
     def __init__(self, log_dir):
         import datetime
@@ -292,7 +291,6 @@ class LossHistory(keras.callbacks.Callback):
         with open(os.path.join(self.save_path, "epoch_val_loss_" + str(self.time_str) + ".txt"), 'a') as f:
             f.write(str(logs.get('val_loss')))
             f.write("\n")
-
         self.loss_plot()
 
     def loss_plot(self):
@@ -302,9 +300,10 @@ class LossHistory(keras.callbacks.Callback):
         plt.plot(iters, self.losses, 'red', linewidth = 2, label='train loss')
         plt.plot(iters, self.val_loss, 'coral', linewidth = 2, label='val loss')
         try:
-            num = len(self.losses) /3
-            num = num if num % 2 else num + 1
-            num = max(num, 5)
+            if len(self.losses) < 25:
+                num = 5
+            else:
+                num = 15
             
             plt.plot(iters, scipy.signal.savgol_filter(self.losses, num, 3), 'green', linestyle = '--', linewidth = 2, label='smooth train loss')
             plt.plot(iters, scipy.signal.savgol_filter(self.val_loss, num, 3), '#8B4513', linestyle = '--', linewidth = 2, label='smooth val loss')
