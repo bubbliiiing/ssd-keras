@@ -93,6 +93,11 @@ class SSD(object):
     #   检测图片
     #---------------------------------------------------#
     def detect_image(self, image):
+        #---------------------------------------------------------#
+        #   在这里将图像转换成RGB图像，防止灰度图在预测时报错。
+        #---------------------------------------------------------#
+        image = image.convert('RGB')
+
         image_shape = np.array(np.shape(image)[0:2])
         #---------------------------------------------------------#
         #   给图像增加灰条，实现不失真的resize
@@ -101,8 +106,7 @@ class SSD(object):
         if self.letterbox_image:
             crop_img = np.array(letterbox_image(image, (self.input_shape[1],self.input_shape[0])))
         else:
-            crop_img = image.convert('RGB')
-            crop_img = crop_img.resize((self.input_shape[1],self.input_shape[0]), Image.BICUBIC)
+            crop_img = image.resize((self.input_shape[1],self.input_shape[0]), Image.BICUBIC)
         photo = np.array(crop_img,dtype = np.float64)
         #-----------------------------------------------------------#
         #   图片预处理，归一化。

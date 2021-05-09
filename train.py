@@ -1,3 +1,4 @@
+import datetime
 import os
 import pickle
 import sys
@@ -15,7 +16,7 @@ from keras.optimizers import Adam
 from keras.preprocessing import image
 
 from nets.ssd import SSD300
-from nets.ssd_training import Generator, MultiboxLoss
+from nets.ssd_training import Generator, LossHistory, MultiboxLoss
 from utils.anchors import get_anchors
 from utils.utils import BBoxUtility
 
@@ -73,6 +74,7 @@ if __name__ == "__main__":
         monitor='val_loss', save_weights_only=True, save_best_only=False, period=1)
     reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=3, verbose=1)
     early_stopping = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=1)
+    loss_history = LossHistory(log_dir)
 
     #----------------------------------------------------------------------#
     #   验证集的划分在train.py代码里面进行
@@ -107,14 +109,20 @@ if __name__ == "__main__":
         gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
                         (input_shape[0], input_shape[1]),NUM_CLASSES)
 
+        epoch_size = num_train // BATCH_SIZE
+        epoch_size_val = num_val // BATCH_SIZE
+
+        if epoch_size == 0 or epoch_size_val == 0:
+            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
+
         model.compile(optimizer=Adam(lr=learning_rate_base),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
-                steps_per_epoch=num_train//BATCH_SIZE,
+                steps_per_epoch=epoch_size,
                 validation_data=gen.generate(False),
-                validation_steps=num_val//BATCH_SIZE,
+                validation_steps=epoch_size_val,
                 epochs=Freeze_epoch, 
                 initial_epoch=Init_epoch,
-                callbacks=[logging, checkpoint, reduce_lr, early_stopping])
+                callbacks=[logging, checkpoint, reduce_lr, early_stopping, loss_history])
 
     for i in range(21):
         model.layers[i].trainable = True
@@ -127,11 +135,17 @@ if __name__ == "__main__":
         gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
                         (input_shape[0], input_shape[1]),NUM_CLASSES)
 
+        epoch_size = num_train // BATCH_SIZE
+        epoch_size_val = num_val // BATCH_SIZE
+
+        if epoch_size == 0 or epoch_size_val == 0:
+            raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
+
         model.compile(optimizer=Adam(lr=learning_rate_base),loss=MultiboxLoss(NUM_CLASSES, neg_pos_ratio=3.0).compute_loss)
         model.fit_generator(gen.generate(True), 
-                steps_per_epoch=num_train//BATCH_SIZE,
+                steps_per_epoch=epoch_size,
                 validation_data=gen.generate(False),
-                validation_steps=num_val//BATCH_SIZE,
+                validation_steps=epoch_size_val,
                 epochs=Epoch, 
                 initial_epoch=Freeze_epoch,
-                callbacks=[logging, checkpoint, reduce_lr, early_stopping])
+                callbacks=[logging, checkpoint, reduce_lr, early_stopping, loss_history])
