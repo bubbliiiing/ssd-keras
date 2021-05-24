@@ -207,20 +207,20 @@ class BBoxUtility(object):
         #---------------------------------------------------#
         #   :4是回归预测结果
         #---------------------------------------------------#
-        mbox_loc = predictions[:, :, :4]
+        mbox_loc        = predictions[:, :, :4]
         #---------------------------------------------------#
         #   获得种类的置信度
         #---------------------------------------------------#
-        mbox_conf = predictions[:, :, 4:-8]
+        mbox_conf       = predictions[:, :, 4:-8]
         #---------------------------------------------------#
         #   获得网络的先验框
         #---------------------------------------------------#
-        mbox_priorbox = predictions[:, :, -8:-4]
+        mbox_priorbox   = predictions[:, :, -8:-4]
         #---------------------------------------------------#
         #   variances是一个改变数量级的参数。
         #   所有variances全去了也可以训练，有了效果更好。
         #---------------------------------------------------#
-        variances = predictions[:, :, -4:]
+        variances       = predictions[:, :, -4:]
 
         results = []
 
@@ -239,30 +239,29 @@ class BBoxUtility(object):
                 #   取出属于该类的所有框的置信度
                 #   判断是否大于门限
                 #--------------------------------#
-                c_confs = mbox_conf[i, :, c]
-                c_confs_m = c_confs > confidence_threshold
+                c_confs     = mbox_conf[i, :, c]
+                c_confs_m   = c_confs > confidence_threshold
                 if len(c_confs[c_confs_m]) > 0:
                     # 取出得分高于confidence_threshold的框
                     boxes_to_process = decode_bbox[c_confs_m]
                     confs_to_process = c_confs[c_confs_m]
                     # 进行iou的非极大抑制
-                    feed_dict = {self.boxes: boxes_to_process,
-                                 self.scores: confs_to_process}
-                    idx = self.sess.run(self.nms, feed_dict=feed_dict)
+                    feed_dict   = {self.boxes: boxes_to_process,
+                                    self.scores: confs_to_process}
+                    idx         = self.sess.run(self.nms, feed_dict=feed_dict)
                     # 取出在非极大抑制中效果较好的内容
-                    good_boxes = boxes_to_process[idx]
-                    confs = confs_to_process[idx][:, None]
+                    good_boxes  = boxes_to_process[idx]
+                    confs       = confs_to_process[idx][:, None]
                     # 将label、置信度、框的位置进行堆叠。
-                    labels = c * np.ones((len(idx), 1))
-                    c_pred = np.concatenate((labels, confs, good_boxes),
-                                            axis=1)
+                    labels      = c * np.ones((len(idx), 1))
+                    c_pred      = np.concatenate((labels, confs, good_boxes), axis=1)
                     # 添加进result里
                     results[-1].extend(c_pred)
 
             if len(results[-1]) > 0:
                 # 按照置信度进行排序
                 results[-1] = np.array(results[-1])
-                argsort = np.argsort(results[-1][:, 1])[::-1]
+                argsort     = np.argsort(results[-1][:, 1])[::-1]
                 results[-1] = results[-1][argsort]
                 # 选出置信度最大的keep_top_k个
                 results[-1] = results[-1][:keep_top_k]

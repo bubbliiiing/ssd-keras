@@ -1,7 +1,5 @@
-import keras.backend as K
-from keras.layers import (Activation, Conv2D, Dense, Flatten,
-                          GlobalAveragePooling2D, Input, MaxPooling2D, Reshape,
-                          ZeroPadding2D, concatenate, merge)
+from keras.layers import (Activation, Conv2D, Flatten, Input, Reshape,
+                          concatenate)
 from keras.models import Model
 
 from nets.ssd_layers import Normalize, PriorBox

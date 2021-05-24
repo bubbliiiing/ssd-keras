@@ -1,19 +1,7 @@
-import datetime
-import os
-import pickle
-import sys
-
-import cv2
-import keras
-import matplotlib.pyplot as plt
 import numpy as np
-import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import (EarlyStopping, ModelCheckpoint, ReduceLROnPlateau,
                              TensorBoard)
-from keras.models import Model
 from keras.optimizers import Adam
-from keras.preprocessing import image
 
 from nets.ssd import SSD300
 from nets.ssd_training import Generator, LossHistory, MultiboxLoss
@@ -101,16 +89,16 @@ if __name__ == "__main__":
     for i in range(21):
         model.layers[i].trainable = False
     if True:
-        Init_epoch = 0
-        Freeze_epoch = 50
-        BATCH_SIZE = 16
-        learning_rate_base = 5e-4
+        Init_epoch          = 0
+        Freeze_epoch        = 50
+        Batch_size          = 16
+        learning_rate_base  = 5e-4
 
-        gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
-                        (input_shape[0], input_shape[1]),NUM_CLASSES)
+        gen                 = Generator(bbox_util, Batch_size, lines[:num_train], lines[num_train:],
+                                (input_shape[0], input_shape[1]), NUM_CLASSES)
 
-        epoch_size = num_train // BATCH_SIZE
-        epoch_size_val = num_val // BATCH_SIZE
+        epoch_size          = num_train // Batch_size
+        epoch_size_val      = num_val // Batch_size
 
         if epoch_size == 0 or epoch_size_val == 0:
             raise ValueError("数据集过小，无法进行训练，请扩充数据集。")
@@ -127,16 +115,16 @@ if __name__ == "__main__":
     for i in range(21):
         model.layers[i].trainable = True
     if True:
-        Freeze_epoch = 50
-        Epoch = 100
-        BATCH_SIZE = 8
-        learning_rate_base = 1e-4
+        Freeze_epoch        = 50
+        Epoch               = 100
+        Batch_size          = 8
+        learning_rate_base  = 1e-4
         
-        gen = Generator(bbox_util, BATCH_SIZE, lines[:num_train], lines[num_train:],
-                        (input_shape[0], input_shape[1]),NUM_CLASSES)
+        gen                 = Generator(bbox_util, Batch_size, lines[:num_train], lines[num_train:],
+                                (input_shape[0], input_shape[1]), NUM_CLASSES)
 
-        epoch_size = num_train // BATCH_SIZE
-        epoch_size_val = num_val // BATCH_SIZE
+        epoch_size          = num_train // Batch_size
+        epoch_size_val      = num_val // Batch_size
 
         if epoch_size == 0 or epoch_size_val == 0:
             raise ValueError("数据集过小，无法进行训练，请扩充数据集。")

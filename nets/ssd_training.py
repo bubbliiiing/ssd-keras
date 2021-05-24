@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal
 import tensorflow as tf
-from keras import backend as K
 from keras.applications.imagenet_utils import preprocess_input
 from PIL import Image
 

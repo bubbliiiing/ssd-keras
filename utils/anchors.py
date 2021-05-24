@@ -1,16 +1,12 @@
-import pickle
-
-import matplotlib.pyplot as plt
 import numpy as np
 
 
 class PriorBox():
     def __init__(self, img_size, min_size, max_size=None, aspect_ratios=None,
                  flip=True, variances=[0.1], clip=True, **kwargs):
-
         self.waxis = 1
         self.haxis = 0
-
+        
         self.img_size = img_size
         if min_size <= 0:
             raise Exception('min_size must be positive.')
@@ -31,7 +27,6 @@ class PriorBox():
                     self.aspect_ratios.append(1.0 / ar)
         self.variances = np.array(variances)
         self.clip = True
-
 
     def call(self, input_shape, mask=None):
         # --------------------------------- #

@@ -7,12 +7,11 @@ import os
 
 import numpy as np
 from keras.applications.imagenet_utils import preprocess_input
-from keras.layers import Input
 from PIL import Image
 from tqdm import tqdm
 
 from ssd import SSD
-from utils.utils import BBoxUtility, letterbox_image, ssd_correct_boxes
+from utils.utils import letterbox_image, ssd_correct_boxes
 
 '''
 这里设置的门限值较低是因为计算map需要用到不同门限条件下的Recall和Precision值。
