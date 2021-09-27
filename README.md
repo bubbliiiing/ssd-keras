@@ -80,7 +80,7 @@ classes_path指向检测类别所对应的txt。**
 
 ## 预测步骤
 ### a、使用预训练权重
-1. 下载完库后解压，在百度网盘下载ssd_weights.pth，放入model_data，运行predict.py，输入  
+1. 下载完库后解压，在百度网盘下载，放入model_data，运行predict.py，输入  
 ```python
 img/street.jpg
 ```
