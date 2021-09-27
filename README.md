@@ -25,8 +25,8 @@ keras==2.1.5
 
 ## 文件下载
 训练所需的ssd_weights.h5可以在百度云下载。  
-链接: https://pan.baidu.com/s/1o4NkzmzAdz7bRtYPDTfeUA   
-提取码: 4wzf   
+链接: https://pan.baidu.com/s/1A3pHj4dy49Q6HurYfXP9KQ   
+提取码: h5wm   
 
 VOC数据集下载地址如下，里面已经包括了训练集、测试集、验证集（与测试集一样），无需再次划分：  
 链接: https://pan.baidu.com/s/1YuBbBKxm2FGgTU5OfaeC5A    
