@@ -1,6 +1,9 @@
 ## SSD: Single-Shot MultiBox Detector目标检测模型在Keras当中的实现
 ---
 
+**2021年10月12日更新：**   
+**进行了大幅度的更新，对代码的模块进行修改，加了大量注释。**   
+
 **2021年2月8日更新：**   
 **加入letterbox_image的选项，关闭letterbox_image后网络的map一般可以得到提升。**
 
@@ -24,7 +27,7 @@ tensorflow-gpu==1.13.1
 keras==2.1.5  
 
 ## 文件下载
-训练所需的ssd_weights.h5可以在百度云下载。  
+训练所需的ssd_weights.h5和主干的权值可以在百度云下载。  
 链接: https://pan.baidu.com/s/1A3pHj4dy49Q6HurYfXP9KQ   
 提取码: h5wm   
 
