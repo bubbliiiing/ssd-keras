@@ -1,7 +1,7 @@
 import keras.backend as K
 from keras.callbacks import (EarlyStopping, ModelCheckpoint,
                              TensorBoard)
-from keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam
 
 from nets.ssd import SSD300
 from nets.ssd_training import MultiboxLoss
