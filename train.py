@@ -206,16 +206,19 @@ if __name__ == "__main__":
     anchors = get_anchors(input_shape, anchors_size)
 
     K.clear_session()
-    model = SSD300((input_shape[0], input_shape[1], 3), num_classes)
+    model_body = SSD300((input_shape[0], input_shape[1], 3), num_classes)
     if model_path != '':
         #------------------------------------------------------#
         #   载入预训练权重
         #------------------------------------------------------#
         print('Load weights {}.'.format(model_path))
-        model.load_weights(model_path, by_name=True, skip_mismatch=True)
+        model_body.load_weights(model_path, by_name=True, skip_mismatch=True)
+        
     if ngpus_per_node > 1:
-        parallel_model = multi_gpu_model(model, gpus=ngpus_per_node)
-
+        model = multi_gpu_model(model_body, gpus=ngpus_per_node)
+    else:
+        model = model_body
+    
     #---------------------------#
     #   读取数据集对应的txt
     #---------------------------#
@@ -226,7 +229,7 @@ if __name__ == "__main__":
     num_train   = len(train_lines)
     num_val     = len(val_lines)
 
-    for layer in model.layers:
+    for layer in model_body.layers:
         if isinstance(layer, DepthwiseConv2D):
                 layer.add_loss(l2(weight_decay)(layer.depthwise_kernel))
         elif isinstance(layer, Conv2D) or isinstance(layer, Dense):
@@ -243,8 +246,8 @@ if __name__ == "__main__":
     if True:
         if Freeze_Train:
             freeze_layers = 17
-            for i in range(freeze_layers): model.layers[i].trainable = False
-            print('Freeze the first {} layers of total {} layers.'.format(freeze_layers, len(model.layers)))
+            for i in range(freeze_layers): model_body.layers[i].trainable = False
+            print('Freeze the first {} layers of total {} layers.'.format(freeze_layers, len(model_body.layers)))
 
         #-------------------------------------------------------------------#
         #   如果不冻结训练的话，直接设置batch_size为Unfreeze_batch_size
@@ -294,7 +297,7 @@ if __name__ == "__main__":
         logging         = TensorBoard(log_dir)
         loss_history    = LossHistory(log_dir)
         if ngpus_per_node > 1:
-            checkpoint      = ParallelModelCheckpoint(model, os.path.join(save_dir, "ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5"), 
+            checkpoint      = ParallelModelCheckpoint(model_body, os.path.join(save_dir, "ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5"), 
                                     monitor = 'val_loss', save_weights_only = True, save_best_only = False, period = save_period)
         else:
             checkpoint      = ModelCheckpoint(os.path.join(save_dir, "ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5"), 
@@ -305,30 +308,17 @@ if __name__ == "__main__":
 
         if start_epoch < end_epoch:
             print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
-            if ngpus_per_node > 1:
-                parallel_model.fit_generator(
-                    generator           = train_dataloader,
-                    steps_per_epoch     = epoch_step,
-                    validation_data     = val_dataloader,
-                    validation_steps    = epoch_step_val,
-                    epochs              = end_epoch,
-                    initial_epoch       = start_epoch,
-                    use_multiprocessing = True if num_workers > 1 else False,
-                    workers             = num_workers,
-                    callbacks           = callbacks
-                )
-            else:
-                model.fit_generator(
-                    generator           = train_dataloader,
-                    steps_per_epoch     = epoch_step,
-                    validation_data     = val_dataloader,
-                    validation_steps    = epoch_step_val,
-                    epochs              = end_epoch,
-                    initial_epoch       = start_epoch,
-                    use_multiprocessing = True if num_workers > 1 else False,
-                    workers             = num_workers,
-                    callbacks           = callbacks
-                )
+            model.fit_generator(
+                generator           = train_dataloader,
+                steps_per_epoch     = epoch_step,
+                validation_data     = val_dataloader,
+                validation_steps    = epoch_step_val,
+                epochs              = end_epoch,
+                initial_epoch       = start_epoch,
+                use_multiprocessing = True if num_workers > 1 else False,
+                workers             = num_workers,
+                callbacks           = callbacks
+            )
         #---------------------------------------#
         #   如果模型有冻结学习部分
         #   则解冻，并设置参数
@@ -353,8 +343,8 @@ if __name__ == "__main__":
             lr_scheduler    = LearningRateScheduler(lr_scheduler_func, verbose = 1)
             callbacks       = [logging, loss_history, checkpoint, lr_scheduler]
 
-            for i in range(len(model.layers)): 
-                model.layers[i].trainable = True
+            for i in range(len(model_body.layers)): 
+                model_body.layers[i].trainable = True
             model.compile(optimizer=optimizer, loss = MultiboxLoss(num_classes, neg_pos_ratio=3.0).compute_loss)
 
             epoch_step      = num_train // batch_size
@@ -367,27 +357,14 @@ if __name__ == "__main__":
             val_dataloader.batch_size      = Unfreeze_batch_size
 
             print('Train on {} samples, val on {} samples, with batch size {}.'.format(num_train, num_val, batch_size))
-            if ngpus_per_node > 1:
-                parallel_model.fit_generator(
-                    generator           = train_dataloader,
-                    steps_per_epoch     = epoch_step,
-                    validation_data     = val_dataloader,
-                    validation_steps    = epoch_step_val,
-                    epochs              = end_epoch,
-                    initial_epoch       = start_epoch,
-                    use_multiprocessing = True if num_workers > 1 else False,
-                    workers             = num_workers,
-                    callbacks           = callbacks
-                )
-            else:
-                model.fit_generator(
-                    generator           = train_dataloader,
-                    steps_per_epoch     = epoch_step,
-                    validation_data     = val_dataloader,
-                    validation_steps    = epoch_step_val,
-                    epochs              = end_epoch,
-                    initial_epoch       = start_epoch,
-                    use_multiprocessing = True if num_workers > 1 else False,
-                    workers             = num_workers,
-                    callbacks           = callbacks
-                )
+            model.fit_generator(
+                generator           = train_dataloader,
+                steps_per_epoch     = epoch_step,
+                validation_data     = val_dataloader,
+                validation_steps    = epoch_step_val,
+                epochs              = end_epoch,
+                initial_epoch       = start_epoch,
+                use_multiprocessing = True if num_workers > 1 else False,
+                workers             = num_workers,
+                callbacks           = callbacks
+            )
