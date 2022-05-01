@@ -7,9 +7,9 @@ from keras.applications.imagenet_utils import preprocess_input
 from PIL import ImageDraw, ImageFont
 
 from nets.ssd import SSD300
-from utils.utils_bbox import BBoxUtility
-from utils.utils import get_classes, resize_image, cvtColor
 from utils.anchors import get_anchors
+from utils.utils import cvtColor, get_classes, resize_image, show_config
+from utils.utils_bbox import BBoxUtility
 
 '''
 训练自己的数据集必看！
@@ -61,6 +61,7 @@ class SSD(object):
     #---------------------------------------------------#
     def __init__(self, **kwargs):
         self.__dict__.update(self._defaults)
+        show_config(**self._defaults)
         for name, value in kwargs.items():
             setattr(self, name, value)
         #---------------------------------------------------#

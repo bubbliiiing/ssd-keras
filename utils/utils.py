@@ -40,6 +40,15 @@ def get_classes(classes_path):
     class_names = [c.strip() for c in class_names]
     return class_names, len(class_names)
 
+def show_config(**kwargs):
+    print('Configurations:')
+    print('-' * 70)
+    print('|%25s | %40s|' % ('keys', 'values'))
+    print('-' * 70)
+    for key, value in kwargs.items():
+        print('|%25s | %40s|' % (str(key), str(value)))
+    print('-' * 70)
+    
 #-------------------------------------------------------------------------------------------------------------------------------#
 #   From https://github.com/ckyrkou/Keras_FLOP_Estimator 
 #   Fix lots of bugs
